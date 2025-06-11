@@ -9,7 +9,8 @@ from flask import (
 )
 from jogoteca import app, db
 from models import Jogos, Usuarios
-from helpers import recupera_imagem
+from helpers import recupera_imagem, deleta_arquivo
+import time
 
 
 @app.route("/")
@@ -48,7 +49,8 @@ def criar():
 
     arquivo = request.files["arquivo"]
     upload_path = app.config["UPLOAD_PATH"]
-    arquivo.save(f"{upload_path}/capa{novo_jogo.id}.jpg")
+    timestamp = time.time()
+    arquivo.save(f"{upload_path}/capa{novo_jogo.id}-{timestamp}.jpg")
 
     return redirect(url_for("index"))
 
@@ -81,7 +83,9 @@ def atualizar():
 
     arquivo = request.files["arquivo"]
     upload_path = app.config["UPLOAD_PATH"]
-    arquivo.save(f"{upload_path}/capa{jogo.id}.jpg")
+    timestamp = time.time()
+    deleta_arquivo(jogo.id)
+    arquivo.save(f"{upload_path}/capa{jogo.id}-{timestamp}.jpg")
 
     return redirect(url_for("index"))
 
@@ -90,10 +94,10 @@ def atualizar():
 def deletar(id):
     if "usuario_logado" not in session or session["usuario_logado"] == None:
         return redirect(url_for("login"))
+
     Jogos.query.filter_by(id=id).delete()
     db.session.commit()
     flash("Jogo deletado com sucesso!")
-
     return redirect(url_for("index"))
 
 
